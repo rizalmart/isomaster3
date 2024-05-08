@@ -25,8 +25,14 @@
 
 /* used by iniparser */
 dictionary* GBLsettingsDictionary;
+
 /* home directory with full path or "/" if don't know it */
 char* GBLuserHomeDir;
+
+/* config directory */
+char* GBLuserConfigDir;
+
+
 /* iso master runtime and stored settings */
 AppSettings GBLappSettings;
 
@@ -247,9 +253,10 @@ void buildImagePropertiesWindow(GtkWidget *widget, GdkEvent *event)
 void findHomeDir(void)
 {
     char* userHomeDir;
+    char* userConfigDir;
     int pathLen;
     
-    userHomeDir = getenv("XDG_CONFIG_HOME");
+    userHomeDir = getenv("HOME");
     
     if(userHomeDir == NULL)
     /* pretend user's home is root */
@@ -298,11 +305,25 @@ void findHomeDir(void)
         strcpy(GBLuserHomeDir, userHomeDir);
         strcat(GBLuserHomeDir, "/");
     }
+    
+    
+    userConfigDir=getenv("XDG_CONFIG_HOME");
+    
+    if(userConfigDir==NULL){
+	  GBLuserConfigDir=GBLuserHomeDir;
+	  strcat(GBLuserConfigDir,".config/");	
+	}
+	else{
+	  GBLuserConfigDir=userConfigDir;
+	  strcat(GBLuserConfigDir, "/");	
+    }
+    
 }
 
 void openConfigFile(char* configFilePathAndName)
 {
     GBLsettingsDictionary = iniparser_load(configFilePathAndName);
+    
     if(GBLsettingsDictionary == NULL)
     {
         printWarning("failed to open config file for reading, trying to create");
@@ -348,15 +369,15 @@ void loadSettings(void)
     int appendExtension;
     int caseSensitiveSort;
     
-    configFileName = malloc(strlen(GBLuserHomeDir) + strlen("isomaster.cfg") + 1);
+    configFileName = malloc(strlen(GBLuserConfigDir) + strlen("isomaster.cfg") + 1);
     
     if(configFileName == NULL)
         fatalError("loadSettings(): malloc(config file name) failed");
     
-    strcpy(configFileName, GBLuserHomeDir);
+    strcpy(configFileName, GBLuserConfigDir);
     strcat(configFileName, "isomaster.cfg");
     
-    if(strcmp(GBLuserHomeDir, "/") != 0 && strcmp(GBLuserHomeDir, "c:\\") != 0)
+    if(strcmp(GBLuserConfigDir, "/") != 0 && strcmp(GBLuserConfigDir, "c:\\") != 0)
         openConfigFile(configFileName);
     else
         printWarning("don't know user's home directory, so will not try to "
@@ -851,9 +872,9 @@ void writeSettings(void)
     int sortColumnId;
     GtkSortType sortDirection;
     
-    if(strcmp(GBLuserHomeDir, "/") == 0 || strcmp(GBLuserHomeDir, "c:\\") == 0)
+    if(strcmp(GBLuserConfigDir, "/") == 0 || strcmp(GBLuserConfigDir, "c:\\") == 0)
     {
-        printWarning("don't know user's home directory, so will not try to save "
+        printWarning("don't know user's home config directory, so will not try to save "
                      "config file");
         return;
     }
@@ -864,11 +885,11 @@ void writeSettings(void)
         return;
     }
     
-    configFileName = malloc(strlen(GBLuserHomeDir) + strlen("isomaster.cfg") + 1);
+    configFileName = malloc(strlen(GBLuserConfigDir) + strlen("isomaster.cfg") + 1);
     if(configFileName == NULL)
         fatalError("writeSettings(): malloc(config file name) failed");
     
-    strcpy(configFileName, GBLuserHomeDir);
+    strcpy(configFileName, GBLuserConfigDir);
     strcat(configFileName, "isomaster.cfg");
     
     fileToWrite = fopen(configFileName, "w");
