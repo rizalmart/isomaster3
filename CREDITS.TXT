@@ -1,7 +1,7 @@
 Many thanks to all the following people:
 
 rizalmart
-2023
+2024
 - ported to GTK+3
 
 Andrew Smith
