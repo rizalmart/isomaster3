@@ -1,5 +1,9 @@
 Many thanks to all the following people:
 
+rizalmart
+2023
+- ported to GTK+3
+
 Andrew Smith
 http://littlesvr.ca/misc/contactandrew.php
 2005 - 2024
