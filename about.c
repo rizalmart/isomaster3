@@ -381,9 +381,14 @@ gboolean helpKeyPressCbk(GtkWidget* widget, GdkEventKey* event, gpointer user_da
 
 void showAboutWindowCbk(GtkMenuItem* menuItem, gpointer data)
 {
+	
+GdkPixbuf *logo_pixbuf = gdk_pixbuf_new_from_file (ICONPATH"/isomaster.png", NULL);
+
+	
 #if GTK_MINOR_VERSION >= 6
     gtk_show_about_dialog(GTK_WINDOW(GBLmainWindow), 
                           "name", GBLprogramName,
+                          "logo",logo_pixbuf, 
 #if GTK_MINOR_VERSION >= 12
                           "program-name", GBLprogramName,
 #endif
@@ -396,11 +401,11 @@ void showAboutWindowCbk(GtkMenuItem* menuItem, gpointer data)
                           NULL);
 #endif
   
-  GdkPixbuf* appIcon;	
+  //GdkPixbuf* appIcon;	
 	
-  loadAppIcon(&appIcon);
+  //loadAppIcon(&appIcon);
   	
-  gtk_about_dialog_set_logo(GTK_WINDOW(GBLmainWindow),&appIcon);
+  //gtk_about_dialog_set_logo(GTK_WINDOW(GBLmainWindow),&appIcon);
   
  
 }
