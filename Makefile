@@ -57,7 +57,7 @@ export ECHO    = echo
 VERSION = 3.0.0
 
 # -DDEBUG and -g only used during development
-CFLAGS += ${OPTFLAGS} -pedantic -std=gnu99 -Wundef -Wcast-align -W -Wpointer-arith -Wwrite-strings -Wno-unused-parameter -Wno-deprecated-declarations `pkg-config --cflags gtk+-3.0`
+CFLAGS += ${OPTFLAGS} -fpermissive -pedantic -std=gnu99 -Wundef -Wcast-align -W -Wpointer-arith -Wwrite-strings -Wno-unused-parameter -Wno-deprecated-declarations `pkg-config --cflags gtk+-3.0`
 ifndef WITHOUT_NLS
 	CFLAGS += -DENABLE_NLS
 endif
