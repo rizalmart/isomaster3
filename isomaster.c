@@ -102,12 +102,12 @@ int main(int argc, char** argv)
     gtk_box_pack_start(GTK_BOX(mainVBox), mainFrame, TRUE, TRUE, 0);
     gtk_widget_show(mainFrame);
     
-    GBLbrowserPaned = gtk_vpaned_new();
+    GBLbrowserPaned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
     gtk_container_add(GTK_CONTAINER(mainFrame), GBLbrowserPaned);
     gtk_widget_show(GBLbrowserPaned);
     gtk_paned_set_position(GTK_PANED(GBLbrowserPaned), GBLappSettings.topPaneHeight);
     
-    topPanedBox = gtk_vbox_new(FALSE, 0);
+    topPanedBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_paned_pack1(GTK_PANED(GBLbrowserPaned), topPanedBox, TRUE, FALSE);
     gtk_widget_show(topPanedBox);
     

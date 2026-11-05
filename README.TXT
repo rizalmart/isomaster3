@@ -8,7 +8,9 @@ ISO Master is based on bkisofs - a library for reading, modifying and writing IS
 
 Prerequisites for Compiling from Source
 ---------------------------------------
-You need a C compiler, make and whatever packages required for compiling GTK2 applications. On ubuntu I had to install (using Synaptic): build-essential, libgtk2.0-dev, pkg-config and gettext. On Slackware I didn't have to install anything.
+You need a C compiler, make and whatever packages are required for compiling GTK3 applications. On Ubuntu/Debian I had to install: build-essential, libgtk-3-dev, pkg-config and gettext. On Slackware I didn't have to install anything.
+
+The translations are compiled with gettext's msgfmt. If msgfmt is not available the build skips the translations automatically; you can also disable them explicitly by running `make WITHOUT_NLS=1`.
 
 To compile the documentation you'll need db2html, which may come in a package named docbook-utils.
 

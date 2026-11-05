@@ -157,36 +157,16 @@ void buildFsBrowser(GtkWidget* boxToPackInto)
     GBLdirPixbuf = NULL;
     GBLfilePixbuf = NULL;
     
-#if GTK_MINOR_VERSION >= 6
-    GtkIconSet* iconSet;
-    GtkIconSize* iconSizes = NULL;
-    int numIconSizes;
-    GtkIconSize iconSize;
-    
-    /* CREATE pixbuf for directory */
-    iconSet = gtk_icon_factory_lookup_default(GTK_STOCK_DIRECTORY);
-    if(iconSet != NULL)
+    /* GTK3: load icons from the icon theme instead of the deprecated
+       GTK2 icon factory API. */
     {
-        gtk_icon_set_get_sizes(iconSet, &iconSizes, &numIconSizes);
-        iconSize = iconSizes[0];
-        g_free(iconSizes);
-        //!! figure out proper size and resisze if necessary, see gtk-demo->stock->create_model()
-        GBLdirPixbuf = gtk_widget_render_icon(GBLfsTreeView, GTK_STOCK_DIRECTORY, iconSize, NULL);
+        GtkIconTheme* iconTheme = gtk_icon_theme_get_default();
+        gint iconWidth = 16;
+
+        gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &iconWidth, NULL);
+        GBLdirPixbuf = gtk_icon_theme_load_icon(iconTheme, "folder", iconWidth, 0, NULL);
+        GBLfilePixbuf = gtk_icon_theme_load_icon(iconTheme, "text-x-generic", iconWidth, 0, NULL);
     }
-    /* END CREATE pixbuf for directory */
-    
-    /* CREATE pixbuf for file */
-    iconSet = gtk_icon_factory_lookup_default(GTK_STOCK_FILE);
-    if(iconSet != NULL)
-    {
-        gtk_icon_set_get_sizes(iconSet, &iconSizes, &numIconSizes);
-        iconSize = iconSizes[0];
-        g_free(iconSizes);
-        //!! figure out proper size and resisze if necessary, see gtk-demo->stock->create_model()
-        GBLfilePixbuf = gtk_widget_render_icon(GBLfsTreeView, GTK_STOCK_FILE, iconSize, NULL);
-    }
-    /* END CREATE pixbuf for file */
-#endif
     
     if(GBLappSettings.fsCurrentDir != NULL)
     {
@@ -571,7 +551,7 @@ void showFsContextMenu(GtkWidget* fsView, GdkEventButton* event)
     menu = gtk_menu_new();
     gtk_menu_set_accel_group(GTK_MENU(menu), accelGroup);
     /*
-    menuItem = gtk_image_menu_item_new_with_label(_("Rename"));
+    menuItem = gtk_menu_item_new_with_label(_("Rename"));
     g_signal_connect(menuItem, "activate", 
                      (GCallback)renameSelectedBtnCbk, NULL);
     gtk_menu_item_set_accel_path(GTK_MENU_ITEM(menuItem), "<ISOMaster>/Contextmenu/Rename");
@@ -580,21 +560,21 @@ void showFsContextMenu(GtkWidget* fsView, GdkEventButton* event)
     if(numSelectedRows > 1)
         gtk_widget_set_sensitive(menuItem, FALSE);
     */
-    menuItem = gtk_image_menu_item_new_with_label(_("View"));
+    menuItem = gtk_menu_item_new_with_label(_("View"));
     g_signal_connect(menuItem, "activate", 
                      (GCallback)viewSelectedBtnCbk, NULL);
     gtk_menu_item_set_accel_path(GTK_MENU_ITEM(menuItem), "<ISOMaster>/Contextmenu/View");
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
     gtk_widget_show_all(menu);
     
-    menuItem = gtk_image_menu_item_new_with_label(_("Edit"));
+    menuItem = gtk_menu_item_new_with_label(_("Edit"));
     g_signal_connect(menuItem, "activate", 
                      (GCallback)editSelectedBtnCbk, NULL);
     gtk_menu_item_set_accel_path(GTK_MENU_ITEM(menuItem), "<ISOMaster>/Contextmenu/Edit");
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
     gtk_widget_show_all(menu);
     /*
-    menuItem = gtk_image_menu_item_new_with_label(_("Change permissions"));
+    menuItem = gtk_menu_item_new_with_label(_("Change permissions"));
     g_signal_connect(menuItem, "activate", 
                      (GCallback)changePermissionsBtnCbk, NULL);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
@@ -602,8 +582,12 @@ void showFsContextMenu(GtkWidget* fsView, GdkEventButton* event)
     if(numSelectedRows > 1)
         gtk_widget_set_sensitive(menuItem, FALSE);
     */
+#if GTK_CHECK_VERSION(3, 22, 0)
+    gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent*)event);
+#else
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
                    event->button, gdk_event_get_time((GdkEvent*)event));
+#endif
 }
 
 void showHiddenCbk(GtkButton *button, gpointer data)

@@ -126,7 +126,7 @@ void addToIsoCbk(GtkButton *button, gpointer data)
     /* dialog window for the progress bar */
     progressWindow = gtk_dialog_new();
     
-    g_object_set (G_OBJECT (progressWindow), "has-separator", FALSE);
+    /* GTK3 dialogs have no separator to configure. */
     
     gtk_window_set_modal(GTK_WINDOW(progressWindow), TRUE);
     gtk_window_set_title(GTK_WINDOW(progressWindow), _("Progress"));
@@ -137,23 +137,23 @@ void addToIsoCbk(GtkButton *button, gpointer data)
                              G_CALLBACK(cancelOperation), NULL);
     
     label = gtk_label_new(_("Please wait while I'm adding the selected items..."));
-    gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(progressWindow))), label, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(progressWindow))), label, TRUE, TRUE, 0);
     gtk_widget_show(label);
     
     if(GBLappSettings.scanForDuplicateFiles)
     {
         label = gtk_label_new(_("(scanning for duplicate files)"));
-        gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(progressWindow))), label, TRUE, TRUE, 0);
+        gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(progressWindow))), label, TRUE, TRUE, 0);
         gtk_widget_show(label);
     }
     
     /* the progress bar */
     GBLactivityProgressBar = gtk_progress_bar_new();
-    gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(progressWindow))), GBLactivityProgressBar, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(progressWindow))), GBLactivityProgressBar, TRUE, TRUE, 0);
     gtk_widget_show(GBLactivityProgressBar);
     
     /* button to cancel adding */
-    gtk_dialog_add_button(GTK_DIALOG(progressWindow), GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+    gtk_dialog_add_button(GTK_DIALOG(progressWindow), _("_Cancel"), GTK_RESPONSE_CANCEL);
     
     /* if i show it before i add the children, the window ends up being not centered */
     gtk_widget_show(progressWindow);
@@ -270,30 +270,28 @@ bool askForPermissions(const char* fullItemName, mode_t* permissions)
     dialog = gtk_dialog_new_with_buttons(_("Change permissions"),
                                          GTK_WINDOW(GBLmainWindow),
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_OK,
+                                         _("_OK"),
                                          GTK_RESPONSE_ACCEPT,
-                                         GTK_STOCK_CANCEL,
+                                         _("_Cancel"),
                                          GTK_RESPONSE_REJECT,
                                          NULL);
     g_signal_connect(dialog, "close", G_CALLBACK(rejectDialogCbk), NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
     
-    table = gtk_table_new(3, 11, FALSE);
-    //~ gtk_table_set_row_spacings(GTK_TABLE(table), 5);
-    //~ gtk_table_set_col_spacings(GTK_TABLE(table), 5);
-    gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(dialog))), table, TRUE, TRUE, 0);
+    table = gtk_grid_new();
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), table, TRUE, TRUE, 0);
     gtk_widget_show(table);
     
     label = gtk_label_new("User");
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 3, 0, 1);
+    gridAttach(table, label, 0, 3, 0, 1);
     gtk_widget_show(label);
     
     label = gtk_label_new("Group");
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 4, 7, 0, 1);
+    gridAttach(table, label, 4, 7, 0, 1);
     gtk_widget_show(label);
     
     label = gtk_label_new("Others");
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 8, 11, 0, 1);
+    gridAttach(table, label, 8, 11, 0, 1);
     gtk_widget_show(label);
     
     for(count = 0; count < 11; count++)
@@ -301,25 +299,25 @@ bool askForPermissions(const char* fullItemName, mode_t* permissions)
         if(count == 0 || count == 4 || count == 8)
         {
             label = gtk_label_new("r");
-            gtk_table_attach_defaults(GTK_TABLE(table), label, count, count + 1, 1, 2);
+            gridAttach(table, label, count, count + 1, 1, 2);
             gtk_widget_show(label);
         }
         else if(count == 1 || count == 5 || count == 9)
         {
             label = gtk_label_new("w");
-            gtk_table_attach_defaults(GTK_TABLE(table), label, count, count + 1, 1, 2);
+            gridAttach(table, label, count, count + 1, 1, 2);
             gtk_widget_show(label);
         }
         else if(count == 2 || count == 6 || count == 10)
         {
             label = gtk_label_new("x");
-            gtk_table_attach_defaults(GTK_TABLE(table), label, count, count + 1, 1, 2);
+            gridAttach(table, label, count, count + 1, 1, 2);
             gtk_widget_show(label);
         }
         else
         {
             label = gtk_label_new("-");
-            gtk_table_attach_defaults(GTK_TABLE(table), label, count, count + 1, 1, 2);
+            gridAttach(table, label, count, count + 1, 1, 2);
             gtk_widget_show(label);
         }
     }
@@ -336,63 +334,63 @@ bool askForPermissions(const char* fullItemName, mode_t* permissions)
     GtkWidget* oxCbx;
     
     urCbx = gtk_check_button_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), urCbx, 0, 1, 2, 3);
+    gridAttach(table, urCbx, 0, 1, 2, 3);
     if(*permissions & 0400)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(urCbx), TRUE);
     gtk_widget_show(urCbx);
     
     uwCbx = gtk_check_button_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), uwCbx, 1, 2, 2, 3);
+    gridAttach(table, uwCbx, 1, 2, 2, 3);
     if(*permissions & 0200)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(uwCbx), TRUE);
     gtk_widget_show(uwCbx);
     
     uxCbx = gtk_check_button_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), uxCbx, 2, 3, 2, 3);
+    gridAttach(table, uxCbx, 2, 3, 2, 3);
     if(*permissions & 0100)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(uxCbx), TRUE);
     gtk_widget_show(uxCbx);
     
     label = gtk_label_new("-");
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 3, 4, 2, 3);
+    gridAttach(table, label, 3, 4, 2, 3);
     gtk_widget_show(label);
     
     grCbx = gtk_check_button_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), grCbx, 4, 5, 2, 3);
+    gridAttach(table, grCbx, 4, 5, 2, 3);
     if(*permissions & 0040)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(grCbx), TRUE);
     gtk_widget_show(grCbx);
     
     gwCbx = gtk_check_button_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), gwCbx, 5, 6, 2, 3);
+    gridAttach(table, gwCbx, 5, 6, 2, 3);
     if(*permissions & 0020)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gwCbx), TRUE);
     gtk_widget_show(gwCbx);
     
     gxCbx = gtk_check_button_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), gxCbx, 6, 7, 2, 3);
+    gridAttach(table, gxCbx, 6, 7, 2, 3);
     if(*permissions & 0010)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gxCbx), TRUE);
     gtk_widget_show(gxCbx);
     
     label = gtk_label_new("-");
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 7, 8, 2, 3);
+    gridAttach(table, label, 7, 8, 2, 3);
     gtk_widget_show(label);
     
     orCbx = gtk_check_button_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), orCbx, 8, 9, 2, 3);
+    gridAttach(table, orCbx, 8, 9, 2, 3);
     if(*permissions & 0004)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(orCbx), TRUE);
     gtk_widget_show(orCbx);
     
     owCbx = gtk_check_button_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), owCbx, 9, 10, 2, 3);
+    gridAttach(table, owCbx, 9, 10, 2, 3);
     if(*permissions & 0002)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(owCbx), TRUE);
     gtk_widget_show(owCbx);
     
     oxCbx = gtk_check_button_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), oxCbx, 10, 11, 2, 3);
+    gridAttach(table, oxCbx, 10, 11, 2, 3);
     if(*permissions & 0001)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(oxCbx), TRUE);
     gtk_widget_show(oxCbx);
@@ -699,8 +697,7 @@ void changePermissionsBtnCbk(GtkMenuItem *menuitem, gpointer data)
             row = row->next;
         }
         
-        g_list_foreach(rowsList, (GFunc)gtk_tree_path_free, NULL);
-        g_list_free(rowsList);
+        g_list_free_full(rowsList, (GDestroyNotify)gtk_tree_path_free);
     } // multiple rows
 }
 
@@ -773,8 +770,8 @@ bool confirmCloseIso(void)
                                            _("It seems that you have made changes to the ISO but "
                                            "haven't saved them. Are you sure you want to close it?"));
     gtk_dialog_add_buttons(GTK_DIALOG(warningDialog),
-                           GTK_STOCK_GO_BACK, GTK_RESPONSE_CANCEL,
-                           GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                           _("_Back"), GTK_RESPONSE_CANCEL,
+                           _("_Close"), GTK_RESPONSE_CLOSE,
                            NULL);
     gtk_window_set_modal(GTK_WINDOW(warningDialog), TRUE);
     gtk_dialog_set_default_response(GTK_DIALOG(warningDialog), GTK_RESPONSE_CLOSE);
@@ -895,7 +892,7 @@ void extractFromIsoCbk(GtkButton *button, gpointer data)
         /* dialog window for the progress bar */
         progressWindow = gtk_dialog_new();
         
-        g_object_set (G_OBJECT (progressWindow), "has-separator", FALSE);
+        /* GTK3 dialogs have no separator to configure. */
         
         gtk_window_set_modal(GTK_WINDOW(progressWindow), TRUE);
         gtk_window_set_title(GTK_WINDOW(progressWindow), _("Progress"));
@@ -907,16 +904,16 @@ void extractFromIsoCbk(GtkButton *button, gpointer data)
         
         /* just some text */
         descriptionLabel = gtk_label_new(_("Please wait while I'm extracting the selected files..."));
-        gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(progressWindow))), descriptionLabel, TRUE, TRUE, 0);
+        gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(progressWindow))), descriptionLabel, TRUE, TRUE, 0);
         gtk_widget_show(descriptionLabel);
         
         /* the progress bar */
         GBLactivityProgressBar = gtk_progress_bar_new();
-        gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(progressWindow))), GBLactivityProgressBar, TRUE, TRUE, 0);
+        gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(progressWindow))), GBLactivityProgressBar, TRUE, TRUE, 0);
         gtk_widget_show(GBLactivityProgressBar);
         
         /* button to cancel extracting */
-        gtk_dialog_add_button(GTK_DIALOG(progressWindow), GTK_STOCK_CANCEL, GTK_RESPONSE_NONE);
+        gtk_dialog_add_button(GTK_DIALOG(progressWindow), _("_Cancel"), GTK_RESPONSE_NONE);
         
         /* if i show it before i add the children, the window ends up being not centered */
         gtk_widget_show(progressWindow);
@@ -1299,7 +1296,7 @@ void openIso(char* filename)
     /* dialog window for the progress bar */
     progressWindow = gtk_dialog_new();
     
-    g_object_set (G_OBJECT (progressWindow), "has-separator", FALSE);
+    /* GTK3 dialogs have no separator to configure. */
     
     gtk_window_set_modal(GTK_WINDOW(progressWindow), TRUE);
     gtk_window_set_title(GTK_WINDOW(progressWindow), _("Progress"));
@@ -1310,23 +1307,23 @@ void openIso(char* filename)
                              G_CALLBACK(cancelOperation), NULL);
     
     label = gtk_label_new(_("Please wait while I'm reading the image..."));
-    gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(progressWindow))), label, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(progressWindow))), label, TRUE, TRUE, 0);
     gtk_widget_show(label);
     
     if(GBLappSettings.scanForDuplicateFiles)
     {
         label = gtk_label_new(_("(scanning for duplicate files)"));
-        gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(progressWindow))), label, TRUE, TRUE, 0);
+        gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(progressWindow))), label, TRUE, TRUE, 0);
         gtk_widget_show(label);
     }
     
     /* the progress bar */
     GBLactivityProgressBar = gtk_progress_bar_new();
-    gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(progressWindow))), GBLactivityProgressBar, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(progressWindow))), GBLactivityProgressBar, TRUE, TRUE, 0);
     gtk_widget_show(GBLactivityProgressBar);
     
     /* button to cancel adding */
-    gtk_dialog_add_button(GTK_DIALOG(progressWindow), GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+    gtk_dialog_add_button(GTK_DIALOG(progressWindow), _("_Cancel"), GTK_RESPONSE_CANCEL);
     
     /* if i show it before i add the children, the window ends up being not centered */
     gtk_widget_show(progressWindow);
@@ -1425,8 +1422,8 @@ gboolean openIsoCbk(GtkMenuItem* menuItem, gpointer data)
     dialog = gtk_file_chooser_dialog_new("Open File",
                                          NULL,
                                          GTK_FILE_CHOOSER_ACTION_OPEN,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                                         _("_Cancel"), GTK_RESPONSE_CANCEL,
+                                         _("_Open"), GTK_RESPONSE_ACCEPT,
                                          NULL);
     
     nameFilter = gtk_file_filter_new();
@@ -1600,9 +1597,9 @@ void renameSelectedRowCbk(GtkTreeModel* model, GtkTreePath* path,
     dialog = gtk_dialog_new_with_buttons(_("Enter a new name:"),
                                          GTK_WINDOW(GBLmainWindow),
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_OK,
+                                         _("_OK"),
                                          GTK_RESPONSE_ACCEPT,
-                                         GTK_STOCK_CANCEL,
+                                         _("_Cancel"),
                                          GTK_RESPONSE_REJECT,
                                          NULL);
     g_signal_connect(dialog, "close", G_CALLBACK(rejectDialogCbk), NULL);
@@ -1614,7 +1611,7 @@ void renameSelectedRowCbk(GtkTreeModel* model, GtkTreePath* path,
     gtk_entry_set_width_chars(GTK_ENTRY(nameField), 32);
     g_signal_connect(nameField, "activate", (GCallback)acceptDialogCbk, dialog);
     gtk_widget_show(nameField);
-    gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(dialog))), nameField, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), nameField, TRUE, TRUE, 0);
     
     gtk_widget_show(dialog);
     
@@ -1661,7 +1658,7 @@ void saveIso(char* filename)
     
     /* dialog window for the progress bar */
     GBLwritingProgressWindow = gtk_dialog_new();
-    g_object_set (G_OBJECT (GBLwritingProgressWindow), "has-separator", FALSE);
+    /* GTK3 dialogs have no separator to configure. */
     gtk_window_set_modal(GTK_WINDOW(GBLwritingProgressWindow), TRUE);
     gtk_window_set_title(GTK_WINDOW(GBLwritingProgressWindow), _("Progress"));
     gtk_window_set_transient_for(GTK_WINDOW(GBLwritingProgressWindow), GTK_WINDOW(GBLmainWindow));
@@ -1674,20 +1671,20 @@ void saveIso(char* filename)
     
     /* just some text */
     descriptionLabel = gtk_label_new(_("Please wait while I'm saving the new image to disk..."));
-    gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(GBLwritingProgressWindow))), descriptionLabel, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(GBLwritingProgressWindow))), descriptionLabel, TRUE, TRUE, 0);
     gtk_widget_show(descriptionLabel);
     
     /* the progress bar */
     GBLWritingProgressBar = gtk_progress_bar_new();
-    gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(GBLwritingProgressWindow))), GBLWritingProgressBar, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(GBLwritingProgressWindow))), GBLWritingProgressBar, TRUE, TRUE, 0);
     gtk_widget_show(GBLWritingProgressBar);
     
     /* button to close the dialog (disabled until writing finished) */
-    okButton = gtk_dialog_add_button(GTK_DIALOG(GBLwritingProgressWindow), GTK_STOCK_OK, GTK_RESPONSE_OK);
+    okButton = gtk_dialog_add_button(GTK_DIALOG(GBLwritingProgressWindow), _("_OK"), GTK_RESPONSE_OK);
     gtk_widget_set_sensitive(okButton, FALSE);
     
     /* button to cancel writing */
-    cancelButton = gtk_dialog_add_button(GTK_DIALOG(GBLwritingProgressWindow), GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+    cancelButton = gtk_dialog_add_button(GTK_DIALOG(GBLwritingProgressWindow), _("_Cancel"), GTK_RESPONSE_CANCEL);
     
     /* if i show it before i add the children, the window ends up being not centered */
     gtk_widget_show(GBLwritingProgressWindow);
@@ -1742,8 +1739,8 @@ gboolean saveIsoCbk(GtkWidget *widget, GdkEvent *event)
     dialog = gtk_file_chooser_dialog_new(_("Save File"),
                                          NULL,
                                          GTK_FILE_CHOOSER_ACTION_SAVE,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
+                                         _("_Cancel"), GTK_RESPONSE_CANCEL,
+                                         _("_Save"), GTK_RESPONSE_ACCEPT,
                                          NULL);
     // gtk problem? enter doesn't work
     //g_signal_connect(dialog, "key-press-event", (GCallback), NULL);
@@ -1918,7 +1915,7 @@ void showIsoContextMenu(GtkWidget* isoView, GdkEventButton* event)
     menu = gtk_menu_new();
     gtk_menu_set_accel_group(GTK_MENU(menu), accelGroup);
     
-    menuItem = gtk_image_menu_item_new_with_label(_("Rename"));
+    menuItem = gtk_menu_item_new_with_label(_("Rename"));
     g_signal_connect(menuItem, "activate", 
                      (GCallback)renameSelectedBtnCbk, NULL);
     gtk_menu_item_set_accel_path(GTK_MENU_ITEM(menuItem), "<ISOMaster>/Contextmenu/Rename");
@@ -1927,21 +1924,21 @@ void showIsoContextMenu(GtkWidget* isoView, GdkEventButton* event)
     if(numSelectedRows > 1)
         gtk_widget_set_sensitive(menuItem, FALSE);
     
-    menuItem = gtk_image_menu_item_new_with_label(_("View"));
+    menuItem = gtk_menu_item_new_with_label(_("View"));
     g_signal_connect(menuItem, "activate", 
                      (GCallback)viewSelectedBtnCbk, NULL);
     gtk_menu_item_set_accel_path(GTK_MENU_ITEM(menuItem), "<ISOMaster>/Contextmenu/View");
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
     gtk_widget_show_all(menu);
     
-    menuItem = gtk_image_menu_item_new_with_label(_("Edit"));
+    menuItem = gtk_menu_item_new_with_label(_("Edit"));
     g_signal_connect(menuItem, "activate", 
                      (GCallback)editSelectedBtnCbk, NULL);
     gtk_menu_item_set_accel_path(GTK_MENU_ITEM(menuItem), "<ISOMaster>/Contextmenu/Edit");
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
     gtk_widget_show_all(menu);
     
-    menuItem = gtk_image_menu_item_new_with_label(_("Change permissions"));
+    menuItem = gtk_menu_item_new_with_label(_("Change permissions"));
     g_signal_connect(menuItem, "activate", 
                      (GCallback)changePermissionsBtnCbk, NULL);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
@@ -1949,8 +1946,12 @@ void showIsoContextMenu(GtkWidget* isoView, GdkEventButton* event)
     //~ if(numSelectedRows > 1)
         //~ gtk_widget_set_sensitive(menuItem, FALSE);
     
+#if GTK_CHECK_VERSION(3, 22, 0)
+    gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent*)event);
+#else
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
                    event->button, gdk_event_get_time((GdkEvent*)event));
+#endif
 }
 
 /* this handles the ok and cancel buttons in the progress window */
