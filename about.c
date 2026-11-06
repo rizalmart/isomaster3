@@ -382,7 +382,8 @@ gboolean helpKeyPressCbk(GtkWidget* widget, GdkEventKey* event, gpointer user_da
 void showAboutWindowCbk(GtkMenuItem* menuItem, gpointer data)
 {
 	
-GdkPixbuf *logo_pixbuf = gdk_pixbuf_new_from_file (ICONPATH"/isomaster.png", NULL);
+GdkPixbuf *logo_pixbuf;
+loadAppIcon(&logo_pixbuf);
 
 	
 #if GTK_MINOR_VERSION >= 6

@@ -19,6 +19,9 @@
 #include <stdio.h>
 #include <time.h>
 #include <signal.h>
+#include <locale.h>
+#include <unistd.h>
+#include <limits.h>
 
 #include "isomaster.h"
 
@@ -29,6 +32,38 @@ GtkWidget* GBLmainWindow;
 GtkWidget* GBLbrowserPaned;
 
 extern AppSettings GBLappSettings;
+
+#ifdef ENABLE_NLS
+/* Let the program find its translations when run straight from the build tree
+ * (without 'make install'). If <exedir>/locale exists, bind there; otherwise
+ * fall back to the compiled-in LOCALEDIR. */
+static void initTranslations(void)
+{
+    char exePath[PATH_MAX];
+    char localeDir[PATH_MAX];
+    ssize_t len;
+    char* lastSlash;
+
+    len = readlink("/proc/self/exe", exePath, sizeof(exePath) - 1);
+    if(len > 0)
+    {
+        exePath[len] = '\0';
+        lastSlash = strrchr(exePath, '/');
+        if(lastSlash != NULL)
+        {
+            snprintf(localeDir, sizeof(localeDir), "%.*s/locale",
+                     (int)(lastSlash - exePath), exePath);
+            if(access(localeDir, X_OK) == 0)
+            {
+                bindtextdomain("isomaster", localeDir);
+                return;
+            }
+        }
+    }
+
+    bindtextdomain("isomaster", LOCALEDIR);
+}
+#endif
 
 int main(int argc, char** argv)
 {
@@ -49,9 +84,13 @@ int main(int argc, char** argv)
         }
     }
     
+    /* select the user's locale (incl. LANG/LC_MESSAGES); required for gettext
+       to actually pick a translation instead of falling back to "C" */
+    setlocale(LC_ALL, "");
+
 #ifdef ENABLE_NLS
     /* initialize gettext */
-    bindtextdomain("isomaster", LOCALEDIR);
+    initTranslations();
     bind_textdomain_codeset("isomaster", "UTF-8"); /* so that gettext() returns UTF-8 strings */
     textdomain("isomaster");
 #endif
@@ -102,12 +141,12 @@ int main(int argc, char** argv)
     gtk_box_pack_start(GTK_BOX(mainVBox), mainFrame, TRUE, TRUE, 0);
     gtk_widget_show(mainFrame);
     
-    GBLbrowserPaned = gtk_vpaned_new();
+    GBLbrowserPaned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
     gtk_container_add(GTK_CONTAINER(mainFrame), GBLbrowserPaned);
     gtk_widget_show(GBLbrowserPaned);
     gtk_paned_set_position(GTK_PANED(GBLbrowserPaned), GBLappSettings.topPaneHeight);
     
-    topPanedBox = gtk_vbox_new(FALSE, 0);
+    topPanedBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_paned_pack1(GTK_PANED(GBLbrowserPaned), topPanedBox, TRUE, FALSE);
     gtk_widget_show(topPanedBox);
     

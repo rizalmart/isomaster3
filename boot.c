@@ -41,8 +41,8 @@ void addBootRecordFromFileCbk(GtkButton *button, gpointer bootRecordType)
     dialog = gtk_file_chooser_dialog_new(_("Choose Boot Record File"),
                                          NULL,
                                          GTK_FILE_CHOOSER_ACTION_OPEN,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                                         _("_Cancel"), GTK_RESPONSE_CANCEL,
+                                         _("_Open"), GTK_RESPONSE_ACCEPT,
                                          NULL);
     
     if(GBLappSettings.lastBootRecordDir != NULL)
@@ -157,8 +157,8 @@ void extractBootRecordCbk(GtkButton *button, gpointer data)
     dialog = gtk_file_chooser_dialog_new(_("Save a copy of the boot record"),
                                          NULL,
                                          GTK_FILE_CHOOSER_ACTION_SAVE,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
+                                         _("_Cancel"), GTK_RESPONSE_CANCEL,
+                                         _("_Save"), GTK_RESPONSE_ACCEPT,
                                          NULL);
     
     if(GBLappSettings.lastBootRecordDir != NULL)
@@ -335,14 +335,15 @@ void showBootInfoCbk(GtkButton *button, gpointer data)
     dialog = gtk_dialog_new_with_buttons(_("Boot Record Information"),
                                          GTK_WINDOW(GBLmainWindow),
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_OK,
+                                         _("_OK"),
                                          GTK_RESPONSE_NONE,
                                          NULL);
     //gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
     g_signal_connect(dialog, "close", G_CALLBACK(rejectDialogCbk), NULL);
     
-    vBox = gtk_vbox_new(TRUE, 5);
-    gtk_container_add(GTK_CONTAINER(gtk_get_dialog_vbox(GTK_DIALOG(dialog))), vBox);
+    vBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+    gtk_box_set_homogeneous(GTK_BOX(vBox), TRUE);
+    gtk_container_add(GTK_CONTAINER(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), vBox);
     gtk_widget_show(vBox);
     
     if(GBLvolInfo.bootMediaType == BOOT_MEDIA_NO_EMULATION)

@@ -6,9 +6,25 @@ ISO Master is an open-source, easy to use, graphical CD image editor for Linux a
 
 ISO Master is based on bkisofs - a library for reading, modifying and writing ISO images.
 
+This Repository
+---------------
+This is a maintained fork of Rizal Martin's GTK3 port of ISO Master
+(https://github.com/rizalmart/isomaster3). On top of the GTK2-to-GTK3 migration
+it fixes a number of issues that the port left behind:
+
+- restores the toolbar, menu and About-dialog icons that were lost when moving
+  off the deprecated GTK2 stock API, and loads them from the build tree so they
+  also show up when running without `make install`;
+- makes the Chinese (and other) translations actually load at runtime by calling
+  `setlocale()` and staging the message catalogs next to the binary;
+- adds a `.gitignore` and assorted build fixes so a plain `make` completes
+  cleanly.
+
 Prerequisites for Compiling from Source
 ---------------------------------------
-You need a C compiler, make and whatever packages required for compiling GTK2 applications. On ubuntu I had to install (using Synaptic): build-essential, libgtk2.0-dev, pkg-config and gettext. On Slackware I didn't have to install anything.
+You need a C compiler, make and whatever packages are required for compiling GTK3 applications. On Ubuntu/Debian I had to install: build-essential, libgtk-3-dev, pkg-config and gettext. On Slackware I didn't have to install anything.
+
+The translations are compiled with gettext's msgfmt. If msgfmt is not available the build skips the translations automatically; you can also disable them explicitly by running `make WITHOUT_NLS=1`.
 
 To compile the documentation you'll need db2html, which may come in a package named docbook-utils.
 
@@ -22,7 +38,7 @@ make
 
 at the command prompt in the directory where you extracted the archive.
 
-And to install (this is optional, you can run from the directory where you compiled it, though you won't get icons if you don't install):
+And to install (this is optional - you can run it straight from the directory where you compiled it; icons and translations are also available there without installing):
 
 su
 [enter root password]

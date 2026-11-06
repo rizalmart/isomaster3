@@ -57,7 +57,7 @@ export ECHO    = echo
 VERSION = 3.0.0
 
 # -DDEBUG and -g only used during development
-CFLAGS += ${OPTFLAGS} -fpermissive -pedantic -std=gnu99 -Wundef -Wcast-align -W -Wpointer-arith -Wwrite-strings -Wno-unused-parameter -Wno-deprecated-declarations `pkg-config --cflags gtk+-3.0`
+CFLAGS += ${OPTFLAGS} -fpermissive -pedantic -std=gnu99 -Wundef -Wcast-align -W -Wpointer-arith -Wwrite-strings -Wno-unused-parameter `pkg-config --cflags gtk+-3.0`
 ifndef WITHOUT_NLS
 	CFLAGS += -DENABLE_NLS
 endif
@@ -103,7 +103,11 @@ endif
 
 translations:
 ifndef WITHOUT_NLS
-	$(MAKE) -C po
+	@if test -f po/Makefile && command -v msgfmt >/dev/null 2>&1; then \
+		$(MAKE) -C po; \
+	else \
+		echo "Skipping translations (msgfmt or po/Makefile not found)"; \
+	fi
 endif
 
 isomaster.desktop: isomaster.desktop.src

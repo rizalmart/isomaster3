@@ -21,9 +21,9 @@
 
 /* this file has thigs shared by the fs and the iso browser */
 
-/* menu-sized pixbufs of a directory and a file */
-GdkPixbuf* GBLdirPixbuf;
-GdkPixbuf* GBLfilePixbuf;
+/* themed icons (resolved from the active icon theme) for a directory and a file */
+GIcon* GBLdirPixbuf;
+GIcon* GBLfilePixbuf;
 //~ GdkPixbuf* GBLsymlinkPixbuf;
 
 /* text box for showing the path and name of the current directory on the fs */
@@ -72,9 +72,9 @@ void createDirCbk(GtkButton *button, gpointer onFs)
     dialog = gtk_dialog_new_with_buttons(_("Enter name for new directory"),
                                          GTK_WINDOW(GBLmainWindow),
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_OK,
+                                         _("_OK"),
                                          GTK_RESPONSE_ACCEPT,
-                                         GTK_STOCK_CANCEL,
+                                         _("_Cancel"),
                                          GTK_RESPONSE_REJECT,
                                          NULL);
     
@@ -87,7 +87,7 @@ void createDirCbk(GtkButton *button, gpointer onFs)
     
     
     //gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), textEntry);
-    gtk_container_add(GTK_CONTAINER(gtk_get_dialog_vbox(dialog)), textEntry);
+    gtk_container_add(GTK_CONTAINER(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), textEntry);
     
     gtk_widget_show(textEntry);
     g_signal_connect(textEntry, "activate", (GCallback)acceptDialogCbk, dialog);

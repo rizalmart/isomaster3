@@ -33,8 +33,8 @@ extern GtkWidget* GBLfsTreeView;
 extern GtkListStore* GBLfsListStore;
 extern char* GBLfsCurrentDir;
 
-extern GdkPixbuf* GBLdirPixbuf;
-extern GdkPixbuf* GBLfilePixbuf;
+extern GIcon* GBLdirPixbuf;
+extern GIcon* GBLfilePixbuf;
 //~ extern GdkPixbuf* GBLsymlinkPixbuf;
 
 extern bool GBLisoChangesProbable;
@@ -78,7 +78,7 @@ void buildFsBrowser(GtkWidget* boxToPackInto)
     GtkTreeViewColumn* column;
     
     GBLfsListStore = gtk_list_store_new(NUM_COLUMNS, 
-                                        GDK_TYPE_PIXBUF, /* icon */
+                                        G_TYPE_ICON,    /* icon */
                                         G_TYPE_STRING,  /* name */
                                         G_TYPE_UINT64, /* size */
                                         G_TYPE_UINT /* file type */
@@ -123,7 +123,7 @@ void buildFsBrowser(GtkWidget* boxToPackInto)
     
     renderer = gtk_cell_renderer_pixbuf_new();
     gtk_tree_view_column_pack_start(GBLfilenameFsColumn, renderer, FALSE);
-    gtk_tree_view_column_add_attribute(GBLfilenameFsColumn, renderer, "pixbuf", COLUMN_ICON);
+    gtk_tree_view_column_add_attribute(GBLfilenameFsColumn, renderer, "gicon", COLUMN_ICON);
     
     renderer = gtk_cell_renderer_text_new();
     gtk_tree_view_column_pack_start(GBLfilenameFsColumn, renderer, TRUE);
@@ -154,39 +154,10 @@ void buildFsBrowser(GtkWidget* boxToPackInto)
                                          GBLappSettings.fsSortColumnId, 
                                          GBLappSettings.fsSortDirection);
     
-    GBLdirPixbuf = NULL;
-    GBLfilePixbuf = NULL;
-    
-#if GTK_MINOR_VERSION >= 6
-    GtkIconSet* iconSet;
-    GtkIconSize* iconSizes = NULL;
-    int numIconSizes;
-    GtkIconSize iconSize;
-    
-    /* CREATE pixbuf for directory */
-    iconSet = gtk_icon_factory_lookup_default(GTK_STOCK_DIRECTORY);
-    if(iconSet != NULL)
-    {
-        gtk_icon_set_get_sizes(iconSet, &iconSizes, &numIconSizes);
-        iconSize = iconSizes[0];
-        g_free(iconSizes);
-        //!! figure out proper size and resisze if necessary, see gtk-demo->stock->create_model()
-        GBLdirPixbuf = gtk_widget_render_icon(GBLfsTreeView, GTK_STOCK_DIRECTORY, iconSize, NULL);
-    }
-    /* END CREATE pixbuf for directory */
-    
-    /* CREATE pixbuf for file */
-    iconSet = gtk_icon_factory_lookup_default(GTK_STOCK_FILE);
-    if(iconSet != NULL)
-    {
-        gtk_icon_set_get_sizes(iconSet, &iconSizes, &numIconSizes);
-        iconSize = iconSizes[0];
-        g_free(iconSizes);
-        //!! figure out proper size and resisze if necessary, see gtk-demo->stock->create_model()
-        GBLfilePixbuf = gtk_widget_render_icon(GBLfsTreeView, GTK_STOCK_FILE, iconSize, NULL);
-    }
-    /* END CREATE pixbuf for file */
-#endif
+    /* GTK3: use themed icons (GThemedIcon) so the list view resolves the
+       directory/file icon from the active icon theme automatically. */
+    GBLdirPixbuf = G_ICON(g_themed_icon_new("folder"));
+    GBLfilePixbuf = G_ICON(g_themed_icon_new("text-x-generic"));
     
     if(GBLappSettings.fsCurrentDir != NULL)
     {
@@ -571,7 +542,7 @@ void showFsContextMenu(GtkWidget* fsView, GdkEventButton* event)
     menu = gtk_menu_new();
     gtk_menu_set_accel_group(GTK_MENU(menu), accelGroup);
     /*
-    menuItem = gtk_image_menu_item_new_with_label(_("Rename"));
+    menuItem = gtk_menu_item_new_with_label(_("Rename"));
     g_signal_connect(menuItem, "activate", 
                      (GCallback)renameSelectedBtnCbk, NULL);
     gtk_menu_item_set_accel_path(GTK_MENU_ITEM(menuItem), "<ISOMaster>/Contextmenu/Rename");
@@ -580,21 +551,21 @@ void showFsContextMenu(GtkWidget* fsView, GdkEventButton* event)
     if(numSelectedRows > 1)
         gtk_widget_set_sensitive(menuItem, FALSE);
     */
-    menuItem = gtk_image_menu_item_new_with_label(_("View"));
+    menuItem = gtk_menu_item_new_with_label(_("View"));
     g_signal_connect(menuItem, "activate", 
                      (GCallback)viewSelectedBtnCbk, NULL);
     gtk_menu_item_set_accel_path(GTK_MENU_ITEM(menuItem), "<ISOMaster>/Contextmenu/View");
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
     gtk_widget_show_all(menu);
     
-    menuItem = gtk_image_menu_item_new_with_label(_("Edit"));
+    menuItem = gtk_menu_item_new_with_label(_("Edit"));
     g_signal_connect(menuItem, "activate", 
                      (GCallback)editSelectedBtnCbk, NULL);
     gtk_menu_item_set_accel_path(GTK_MENU_ITEM(menuItem), "<ISOMaster>/Contextmenu/Edit");
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
     gtk_widget_show_all(menu);
     /*
-    menuItem = gtk_image_menu_item_new_with_label(_("Change permissions"));
+    menuItem = gtk_menu_item_new_with_label(_("Change permissions"));
     g_signal_connect(menuItem, "activate", 
                      (GCallback)changePermissionsBtnCbk, NULL);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
@@ -602,8 +573,12 @@ void showFsContextMenu(GtkWidget* fsView, GdkEventButton* event)
     if(numSelectedRows > 1)
         gtk_widget_set_sensitive(menuItem, FALSE);
     */
+#if GTK_CHECK_VERSION(3, 22, 0)
+    gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent*)event);
+#else
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
                    event->button, gdk_event_get_time((GdkEvent*)event));
+#endif
 }
 
 void showHiddenCbk(GtkButton *button, gpointer data)

@@ -35,5 +35,14 @@
 #  define S_IFREG  0100000
 #endif
 
+/* GtkTable addressed cells as (left, right, top, bottom) while GtkGrid uses
+   (column, row, width, height). Keep the original layout coordinates readable
+   when attaching widgets to a GTK3 GtkGrid. */
+static inline void gridAttach(GtkWidget* grid, GtkWidget* child,
+                              int left, int right, int top, int bottom)
+{
+    gtk_grid_attach(GTK_GRID(grid), child, left, top, right - left, bottom - top);
+}
+
 #endif
 

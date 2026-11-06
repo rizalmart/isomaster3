@@ -46,46 +46,7 @@ extern GtkListStore* GBLfsListStore;
 extern GtkListStore* GBLisoListStore;
 extern GtkWidget* GBLrecentlyOpenWidgets[5];
 
-GtkWidget* find_vbox_in_container(GtkWidget *container) {
-    GList *children = gtk_container_get_children(GTK_CONTAINER(container));
-    while (children != NULL) {
-        GtkWidget *child = children->data;
-        
-        if (GTK_IS_BOX(child)) {
-            GtkOrientation orientation = gtk_orientable_get_orientation(GTK_ORIENTABLE(child));
-            if (orientation == GTK_ORIENTATION_VERTICAL) {
-                return child;
-            }
-        }
 
-        // Recursively check children of containers
-        GtkWidget *found_vbox = find_vbox_in_container(child);
-        if (found_vbox != NULL) {
-            return found_vbox;
-        }
-
-        children = g_list_next(children);
-    }
-
-    return NULL;
-}
-
-GtkWidget* gtk_get_dialog_vbox(GtkDialog *dialog){
-
-    GtkWidget *content_area = gtk_dialog_get_content_area(dialog);
-    GtkWidget *vbox;
-
-	// If the content area is a GtkBox, you can use it directly
-	if (GTK_IS_BOX(content_area)) {
-		vbox = content_area;
-	} else {
-		// If it's not a box, you may need to traverse its children to find the vbox
-		vbox = find_vbox_in_container(content_area);
-	}	
-	
-	return(vbox);
-	
-}
 
 
 void buildImagePropertiesWindow(GtkWidget *widget, GdkEvent *event)
@@ -111,22 +72,23 @@ void buildImagePropertiesWindow(GtkWidget *widget, GdkEvent *event)
     dialog = gtk_dialog_new_with_buttons(_("Image Information"),
                                          GTK_WINDOW(GBLmainWindow),
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_OK,
+                                         _("_OK"),
                                          GTK_RESPONSE_ACCEPT,
-                                         GTK_STOCK_CANCEL,
+                                         _("_Cancel"),
                                          GTK_RESPONSE_REJECT,
                                          NULL);
     g_signal_connect(dialog, "close", G_CALLBACK(rejectDialogCbk), NULL);
     
-    table = gtk_table_new(1, 2, FALSE);
-    gtk_table_set_row_spacings(GTK_TABLE(table), 5);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 5);
-    gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(dialog))), table, TRUE, TRUE, 0);
+    table = gtk_grid_new();
+    gtk_grid_set_row_spacing(GTK_GRID(table), 5);
+    gtk_grid_set_column_spacing(GTK_GRID(table), 5);
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), table, TRUE, TRUE, 0);
     gtk_widget_show(table);
     
     label = gtk_label_new(_("Creation time:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0, 0);
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 0, 1);
+    gtk_widget_set_halign(label, GTK_ALIGN_START);
+    gtk_widget_set_valign(label, GTK_ALIGN_START);
+    gridAttach(table, label, 0, 1, 0, 1);
     gtk_widget_show(label);
     
     timeT = bk_get_creation_time(&GBLvolInfo);
@@ -137,12 +99,13 @@ void buildImagePropertiesWindow(GtkWidget *widget, GdkEvent *event)
     //gtk_entry_set_editable(GTK_ENTRY(field), FALSE);
     gtk_widget_set_sensitive(field, FALSE);
     gtk_entry_set_width_chars(GTK_ENTRY(field), fieldLen);
-    gtk_table_attach_defaults(GTK_TABLE(table), field, 1, 2, 0, 1);
+    gridAttach(table, field, 1, 2, 0, 1);
     gtk_widget_show(field);
     
     label = gtk_label_new(_("Volume name:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0, 0);
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 1, 2);
+    gtk_widget_set_halign(label, GTK_ALIGN_START);
+    gtk_widget_set_valign(label, GTK_ALIGN_START);
+    gridAttach(table, label, 0, 1, 1, 2);
     gtk_widget_show(label);
     
     volNameField = gtk_entry_new();
@@ -153,12 +116,13 @@ void buildImagePropertiesWindow(GtkWidget *widget, GdkEvent *event)
     gtk_entry_set_text(GTK_ENTRY(volNameField), bk_get_volume_name(&GBLvolInfo));
     gtk_entry_set_width_chars(GTK_ENTRY(volNameField), fieldLen);
     g_signal_connect(volNameField, "activate", (GCallback)acceptDialogCbk, dialog);
-    gtk_table_attach_defaults(GTK_TABLE(table), volNameField, 1, 2, 1, 2);
+    gridAttach(table, volNameField, 1, 2, 1, 2);
     gtk_widget_show(volNameField);
     
     label = gtk_label_new(_("Publisher:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0, 0);
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 2, 3);
+    gtk_widget_set_halign(label, GTK_ALIGN_START);
+    gtk_widget_set_valign(label, GTK_ALIGN_START);
+    gridAttach(table, label, 0, 1, 2, 3);
     gtk_widget_show(label);
     
     publisherField = gtk_entry_new();
@@ -168,15 +132,16 @@ void buildImagePropertiesWindow(GtkWidget *widget, GdkEvent *event)
     gtk_entry_set_text(GTK_ENTRY(publisherField), bk_get_publisher(&GBLvolInfo));
     gtk_entry_set_width_chars(GTK_ENTRY(publisherField), fieldLen);
     g_signal_connect(publisherField, "activate", (GCallback)acceptDialogCbk, dialog);
-    gtk_table_attach_defaults(GTK_TABLE(table), publisherField, 1, 2, 2, 3);
+    gridAttach(table, publisherField, 1, 2, 2, 3);
     gtk_widget_show(publisherField);
     
-    hBox = gtk_hbox_new(FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(dialog))), hBox, TRUE, TRUE, 5);
+    hBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), hBox, TRUE, TRUE, 5);
     gtk_widget_show(hBox);
     
     label = gtk_label_new(_("Filename types (both recommended):"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0, 0);
+    gtk_widget_set_halign(label, GTK_ALIGN_START);
+    gtk_widget_set_valign(label, GTK_ALIGN_START);
     gtk_box_pack_start(GTK_BOX(hBox), label, TRUE, TRUE, 0);
     gtk_widget_show(label);
     
@@ -760,9 +725,9 @@ void showPreferencesWindowCbk(GtkButton* button, gpointer data)
     prefWidgets.dialog = gtk_dialog_new_with_buttons(_("Options"),
                                          GTK_WINDOW(GBLmainWindow),
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_OK,
+                                         _("_OK"),
                                          GTK_RESPONSE_ACCEPT,
-                                         GTK_STOCK_CANCEL,
+                                         _("_Cancel"),
                                          GTK_RESPONSE_REJECT,
                                          NULL);
     gtk_window_set_transient_for(GTK_WINDOW(prefWidgets.dialog), GTK_WINDOW(GBLmainWindow));
@@ -774,7 +739,7 @@ void showPreferencesWindowCbk(GtkButton* button, gpointer data)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(prefWidgets.scanForDuplicateFiles), TRUE);
     else
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(prefWidgets.scanForDuplicateFiles), FALSE);
-    gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(prefWidgets.dialog))), 
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(prefWidgets.dialog))), 
                        prefWidgets.scanForDuplicateFiles, 
                        TRUE, TRUE, 0);
     gtk_widget_show(prefWidgets.scanForDuplicateFiles);
@@ -787,43 +752,43 @@ void showPreferencesWindowCbk(GtkButton* button, gpointer data)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(prefWidgets.followSymlinks), TRUE);
     else
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(prefWidgets.followSymlinks), FALSE);
-    gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(prefWidgets.dialog))), 
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(prefWidgets.dialog))), 
                        prefWidgets.followSymlinks, 
                        TRUE, TRUE, 0);
     gtk_widget_show(prefWidgets.followSymlinks);
     
     label = gtk_label_new(_("Editor"));
-    gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(prefWidgets.dialog))), 
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(prefWidgets.dialog))), 
                        label, TRUE, TRUE, 0);
     gtk_widget_show(label);
     
     prefWidgets.editor = gtk_entry_new();
     gtk_entry_set_text(GTK_ENTRY(prefWidgets.editor), GBLappSettings.editor);
     gtk_entry_set_width_chars(GTK_ENTRY(prefWidgets.editor), 30);
-    gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(prefWidgets.dialog))), 
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(prefWidgets.dialog))), 
                        prefWidgets.editor, TRUE, TRUE, 0);
     gtk_widget_show(prefWidgets.editor);
     
     label = gtk_label_new(_("Viewer"));
-    gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(prefWidgets.dialog))), label, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(prefWidgets.dialog))), label, TRUE, TRUE, 0);
     gtk_widget_show(label);
     
     prefWidgets.viewer = gtk_entry_new();
     gtk_entry_set_text(GTK_ENTRY(prefWidgets.viewer), GBLappSettings.viewer);
     gtk_entry_set_width_chars(GTK_ENTRY(prefWidgets.viewer), 30);
-    gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(prefWidgets.dialog))), 
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(prefWidgets.dialog))), 
                        prefWidgets.viewer, TRUE, TRUE, 0);
     gtk_widget_show(prefWidgets.viewer);
     
     label = gtk_label_new(_("Temporary directory"));
-    gtk_box_pack_start(GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(prefWidgets.dialog))), label, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(prefWidgets.dialog))), label, TRUE, TRUE, 0);
     gtk_widget_show(label);
     
     prefWidgets.tempDir = gtk_file_chooser_button_new(_("Temporary directory"), GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
     gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(prefWidgets.tempDir), GBLappSettings.tempDir);
     //!! add /tmp to quicklist or something
     gtk_file_chooser_add_shortcut_folder(GTK_FILE_CHOOSER(prefWidgets.tempDir), "/tmp", NULL);
-    gtk_box_pack_start (GTK_BOX(gtk_get_dialog_vbox(GTK_DIALOG(prefWidgets.dialog))), prefWidgets.tempDir, 
+    gtk_box_pack_start (GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(prefWidgets.dialog))), prefWidgets.tempDir, 
         TRUE, TRUE, 0);
     gtk_widget_show (prefWidgets.tempDir);
     
