@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <signal.h>
+#include <locale.h>
 
 #include "isomaster.h"
 
@@ -49,6 +50,10 @@ int main(int argc, char** argv)
         }
     }
     
+    /* select the user's locale (incl. LANG/LC_MESSAGES); required for gettext
+       to actually pick a translation instead of falling back to "C" */
+    setlocale(LC_ALL, "");
+
 #ifdef ENABLE_NLS
     /* initialize gettext */
     bindtextdomain("isomaster", LOCALEDIR);
