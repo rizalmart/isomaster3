@@ -33,8 +33,8 @@ extern GtkWidget* GBLfsTreeView;
 extern GtkListStore* GBLfsListStore;
 extern char* GBLfsCurrentDir;
 
-extern GdkPixbuf* GBLdirPixbuf;
-extern GdkPixbuf* GBLfilePixbuf;
+extern GIcon* GBLdirPixbuf;
+extern GIcon* GBLfilePixbuf;
 //~ extern GdkPixbuf* GBLsymlinkPixbuf;
 
 extern bool GBLisoChangesProbable;
@@ -78,7 +78,7 @@ void buildFsBrowser(GtkWidget* boxToPackInto)
     GtkTreeViewColumn* column;
     
     GBLfsListStore = gtk_list_store_new(NUM_COLUMNS, 
-                                        GDK_TYPE_PIXBUF, /* icon */
+                                        G_TYPE_ICON,    /* icon */
                                         G_TYPE_STRING,  /* name */
                                         G_TYPE_UINT64, /* size */
                                         G_TYPE_UINT /* file type */
@@ -123,7 +123,7 @@ void buildFsBrowser(GtkWidget* boxToPackInto)
     
     renderer = gtk_cell_renderer_pixbuf_new();
     gtk_tree_view_column_pack_start(GBLfilenameFsColumn, renderer, FALSE);
-    gtk_tree_view_column_add_attribute(GBLfilenameFsColumn, renderer, "pixbuf", COLUMN_ICON);
+    gtk_tree_view_column_add_attribute(GBLfilenameFsColumn, renderer, "gicon", COLUMN_ICON);
     
     renderer = gtk_cell_renderer_text_new();
     gtk_tree_view_column_pack_start(GBLfilenameFsColumn, renderer, TRUE);
@@ -154,19 +154,10 @@ void buildFsBrowser(GtkWidget* boxToPackInto)
                                          GBLappSettings.fsSortColumnId, 
                                          GBLappSettings.fsSortDirection);
     
-    GBLdirPixbuf = NULL;
-    GBLfilePixbuf = NULL;
-    
-    /* GTK3: load icons from the icon theme instead of the deprecated
-       GTK2 icon factory API. */
-    {
-        GtkIconTheme* iconTheme = gtk_icon_theme_get_default();
-        gint iconWidth = 16;
-
-        gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &iconWidth, NULL);
-        GBLdirPixbuf = gtk_icon_theme_load_icon(iconTheme, "folder", iconWidth, 0, NULL);
-        GBLfilePixbuf = gtk_icon_theme_load_icon(iconTheme, "text-x-generic", iconWidth, 0, NULL);
-    }
+    /* GTK3: use themed icons (GThemedIcon) so the list view resolves the
+       directory/file icon from the active icon theme automatically. */
+    GBLdirPixbuf = G_ICON(g_themed_icon_new("folder"));
+    GBLfilePixbuf = G_ICON(g_themed_icon_new("text-x-generic"));
     
     if(GBLappSettings.fsCurrentDir != NULL)
     {

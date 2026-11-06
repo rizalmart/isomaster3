@@ -18,6 +18,31 @@
 
 #include "isomaster.h"
 
+/* GTK3: build a menu item that always shows its icon. The old GtkImageMenuItem
+   and the gtk-menu-images setting are deprecated/unreliable, so we pack the
+   icon and the mnemonic label into a small box ourselves. */
+static GtkWidget* newMenuItem(const char* iconName, const char* label,
+                              GCallback cb, const char* accelPath, gpointer userData)
+{
+    GtkWidget* item = gtk_menu_item_new();
+    GtkWidget* box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
+    GtkWidget* img = gtk_image_new_from_icon_name(iconName, GTK_ICON_SIZE_MENU);
+    GtkWidget* lbl = gtk_label_new_with_mnemonic(label);
+
+    gtk_label_set_mnemonic_widget(GTK_LABEL(lbl), item);
+    gtk_box_pack_start(GTK_BOX(box), img, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(box), lbl, FALSE, FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(item), box);
+    gtk_widget_show_all(item);
+
+    if(cb != NULL)
+        g_signal_connect(G_OBJECT(item), "activate", cb, userData);
+    if(accelPath != NULL)
+        gtk_menu_item_set_accel_path(GTK_MENU_ITEM(item), accelPath);
+
+    return item;
+}
+
 /* the label that holds the value of the iso size */
 GtkWidget* GBLisoSizeLbl;
 /* icon for 'go back' for fs browser */
@@ -126,24 +151,17 @@ void buildMenu(GtkWidget* boxToPackInto)
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(rootMenu), menu);
     gtk_menu_set_accel_group(GTK_MENU(menu), accelGroup);
     
-    menuItem = gtk_menu_item_new_with_mnemonic(_("_New"));
+    menuItem = newMenuItem("document-new", _("_New"),
+                           G_CALLBACK(newIsoCbk), "<ISOMaster>/File/New", NULL);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
-    gtk_widget_show(menuItem);
-    g_signal_connect(G_OBJECT(menuItem), "activate",
-                     G_CALLBACK(newIsoCbk), NULL);
-    gtk_menu_item_set_accel_path(GTK_MENU_ITEM(menuItem), "<ISOMaster>/File/New");
     
-    menuItem = gtk_menu_item_new_with_mnemonic(_("_Open"));
+    menuItem = newMenuItem("document-open", _("_Open"),
+                           G_CALLBACK(openIsoCbk), "<ISOMaster>/File/Open", NULL);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
-    gtk_widget_show(menuItem);
-    g_signal_connect(G_OBJECT(menuItem), "activate",
-                     G_CALLBACK(openIsoCbk), NULL);
-    gtk_menu_item_set_accel_path(GTK_MENU_ITEM(menuItem), "<ISOMaster>/File/Open");
     
 /* OPEN recent submenu */
-    rootSubmenu = gtk_menu_item_new_with_mnemonic(_("Open _Recent"));
+    rootSubmenu = newMenuItem("document-open", _("Open _Recent"), NULL, NULL, NULL);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), rootSubmenu);
-    gtk_widget_show(rootSubmenu);
     
     submenu = gtk_menu_new();
     
@@ -169,36 +187,26 @@ void buildMenu(GtkWidget* boxToPackInto)
     /* END OPEN recent submenu */
     
 #ifdef ENABLE_SAVE_OVERWRITE
-    menuItem = gtk_menu_item_new_with_mnemonic(_("_Save"));
+    menuItem = newMenuItem("document-save", _("_Save"),
+                           G_CALLBACK(saveOverwriteIsoCbk), NULL, NULL);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
-    gtk_widget_show(menuItem);
-    g_signal_connect(G_OBJECT(menuItem), "activate",
-                     G_CALLBACK(saveOverwriteIsoCbk), NULL);
 #endif
     
-    menuItem = gtk_menu_item_new_with_mnemonic(_("Save _As"));
+    menuItem = newMenuItem("document-save-as", _("Save _As"),
+                           G_CALLBACK(saveIsoCbk), "<ISOMaster>/File/Save", NULL);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
-    gtk_widget_show(menuItem);
-    g_signal_connect(G_OBJECT(menuItem), "activate",
-                     G_CALLBACK(saveIsoCbk), NULL);
-    gtk_menu_item_set_accel_path(GTK_MENU_ITEM(menuItem), "<ISOMaster>/File/Save");
     
-    menuItem = gtk_menu_item_new_with_mnemonic(_("P_roperties"));
+    menuItem = newMenuItem("document-properties", _("P_roperties"),
+                           G_CALLBACK(buildImagePropertiesWindow), NULL, NULL);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
-    gtk_widget_show(menuItem);
-    g_signal_connect(G_OBJECT(menuItem), "activate",
-                     G_CALLBACK(buildImagePropertiesWindow), NULL);
     
     separator = gtk_separator_menu_item_new();
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), separator);
     gtk_widget_show(separator);
     
-    menuItem = gtk_menu_item_new_with_mnemonic(_("_Quit"));
+    menuItem = newMenuItem("application-exit", _("_Quit"),
+                           G_CALLBACK(closeMainWindowCbk), "<ISOMaster>/File/Quit", NULL);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
-    gtk_widget_show(menuItem);
-    g_signal_connect(G_OBJECT(menuItem), "activate",
-                     G_CALLBACK(closeMainWindowCbk), NULL);
-    gtk_menu_item_set_accel_path(GTK_MENU_ITEM(menuItem), "<ISOMaster>/File/Quit");
     /* END FILE menu */
     
     /* VIEW menu */
@@ -210,12 +218,9 @@ void buildMenu(GtkWidget* boxToPackInto)
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(rootMenu), menu);
     gtk_menu_set_accel_group(GTK_MENU(menu), accelGroup);
     
-    menuItem = gtk_menu_item_new_with_mnemonic(_("_Refresh"));
+    menuItem = newMenuItem("view-refresh", _("_Refresh"),
+                           G_CALLBACK(refreshBothViewsCbk), "<ISOMaster>/View/Refresh", NULL);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
-    gtk_widget_show(menuItem);
-    g_signal_connect(G_OBJECT(menuItem), "activate",
-                     G_CALLBACK(refreshBothViewsCbk), NULL);
-    gtk_menu_item_set_accel_path(GTK_MENU_ITEM(menuItem), "<ISOMaster>/View/Refresh");
     
     checkbox = gtk_check_menu_item_new_with_mnemonic(_("Show _hidden files"));
     if(GBLappSettings.showHiddenFilesFs)
@@ -264,27 +269,20 @@ void buildMenu(GtkWidget* boxToPackInto)
     submenu = gtk_menu_new();
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(rootSubmenu), submenu);
     
-    menuItem = gtk_menu_item_new_with_mnemonic(_("P_roperties"));
+    menuItem = newMenuItem("document-properties", _("P_roperties"),
+                           G_CALLBACK(showBootInfoCbk), NULL, NULL);
     gtk_menu_shell_append(GTK_MENU_SHELL(submenu), menuItem);
-    gtk_widget_show(menuItem);
-    g_signal_connect(G_OBJECT(menuItem), "activate",
-                     G_CALLBACK(showBootInfoCbk), NULL);
     
-    menuItem = gtk_menu_item_new_with_mnemonic(_("Save _As"));
+    menuItem = newMenuItem("document-save-as", _("Save _As"),
+                           G_CALLBACK(extractBootRecordCbk), NULL, NULL);
     gtk_menu_shell_append(GTK_MENU_SHELL(submenu), menuItem);
-    gtk_widget_show(menuItem);
-    g_signal_connect(G_OBJECT(menuItem), "activate",
-                     G_CALLBACK(extractBootRecordCbk), NULL);
     
-    menuItem = gtk_menu_item_new_with_mnemonic(_("_Delete"));
+    menuItem = newMenuItem("edit-delete", _("_Delete"),
+                           G_CALLBACK(deleteBootRecordCbk), NULL, NULL);
     gtk_menu_shell_append(GTK_MENU_SHELL(submenu), menuItem);
-    gtk_widget_show(menuItem);
-    g_signal_connect(G_OBJECT(menuItem), "activate",
-                     G_CALLBACK(deleteBootRecordCbk), NULL);
     
-    rootSubmenu2 = gtk_menu_item_new_with_label(_("Add"));
+    rootSubmenu2 = newMenuItem("list-add", _("Add"), NULL, NULL, NULL);
     gtk_menu_shell_append(GTK_MENU_SHELL(submenu), rootSubmenu2);
-    gtk_widget_show(rootSubmenu2);
     
     submenu2 = gtk_menu_new();
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(rootSubmenu2), submenu2);
@@ -320,11 +318,10 @@ void buildMenu(GtkWidget* boxToPackInto)
                      G_CALLBACK(addBootRecordFromFileCbk), (gpointer)BOOT_MEDIA_2_88_FLOPPY);
     /* END BOOT submenu */
     
-    menuItem = gtk_menu_item_new_with_mnemonic(_("_Options"));
+    menuItem = newMenuItem("preferences-system", _("_Options"),
+                           G_CALLBACK(showPreferencesWindowCbk), NULL,
+                           (gpointer)BOOT_MEDIA_1_44_FLOPPY);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
-    gtk_widget_show(menuItem);
-    g_signal_connect(G_OBJECT(menuItem), "activate",
-                     G_CALLBACK(showPreferencesWindowCbk), (gpointer)BOOT_MEDIA_1_44_FLOPPY);
     /* END TOOLS menu */
     
     /* HELP menu */
@@ -336,19 +333,14 @@ void buildMenu(GtkWidget* boxToPackInto)
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(rootMenu), menu);
     gtk_menu_set_accel_group(GTK_MENU(menu), accelGroup);
     
-    menuItem = gtk_menu_item_new_with_mnemonic(_("_Overview"));
+    menuItem = newMenuItem("help-content", _("_Overview"),
+                           G_CALLBACK(showHelpOverviewCbk), "<ISOMaster>/Help/Overview", NULL);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
-    gtk_widget_show(menuItem);
-    g_signal_connect(G_OBJECT(menuItem), "activate",
-                     G_CALLBACK(showHelpOverviewCbk), NULL);
-    gtk_menu_item_set_accel_path(GTK_MENU_ITEM(menuItem), "<ISOMaster>/Help/Overview");
     
 #if GTK_MINOR_VERSION >= 6
-    menuItem = gtk_menu_item_new_with_mnemonic(_("_About"));
+    menuItem = newMenuItem("help-about", _("_About"),
+                           G_CALLBACK(showAboutWindowCbk), NULL, NULL);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
-    gtk_widget_show(menuItem);
-    g_signal_connect(G_OBJECT(menuItem), "activate",
-                     G_CALLBACK(showAboutWindowCbk), NULL);
 #endif
     /* END HELP menu */
 }

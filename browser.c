@@ -21,9 +21,9 @@
 
 /* this file has thigs shared by the fs and the iso browser */
 
-/* menu-sized pixbufs of a directory and a file */
-GdkPixbuf* GBLdirPixbuf;
-GdkPixbuf* GBLfilePixbuf;
+/* themed icons (resolved from the active icon theme) for a directory and a file */
+GIcon* GBLdirPixbuf;
+GIcon* GBLfilePixbuf;
 //~ GdkPixbuf* GBLsymlinkPixbuf;
 
 /* text box for showing the path and name of the current directory on the fs */

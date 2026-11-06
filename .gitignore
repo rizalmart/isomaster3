@@ -1,0 +1,10 @@
+# Build artifacts
+*.o
+/isomaster
+bk/bk.a
+iniparser-4.1/libiniparser.a
+iniparser-4.1/libiniparser.so*
+
+# Generated files
+/isomaster.desktop
+po/*.mo

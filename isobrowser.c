@@ -37,8 +37,8 @@ extern GtkListStore* GBLfsListStore;
 extern char* GBLfsCurrentDir;
 extern GtkWidget* GBLisoSizeLbl;
 extern GtkWidget* GBLisoCurrentDirField;
-extern GdkPixbuf* GBLdirPixbuf;
-extern GdkPixbuf* GBLfilePixbuf;
+extern GIcon* GBLdirPixbuf;
+extern GIcon* GBLfilePixbuf;
 extern AppSettings GBLappSettings;
 extern GtkWidget* GBLrecentlyOpenWidgets[5];
 
@@ -438,7 +438,7 @@ void buildIsoBrowser(GtkWidget* boxToPackInto)
     GtkTreeViewColumn* column;
     
     GBLisoListStore = gtk_list_store_new(NUM_COLUMNS, 
-                                         GDK_TYPE_PIXBUF, /* icon */
+                                         G_TYPE_ICON,    /* icon */
                                          G_TYPE_STRING, /* name */
                                          G_TYPE_UINT, /* size (64-bit sizes not allowed on an iso) */
                                          G_TYPE_UINT /* file type */
@@ -485,7 +485,7 @@ void buildIsoBrowser(GtkWidget* boxToPackInto)
     
     renderer = gtk_cell_renderer_pixbuf_new();
     gtk_tree_view_column_pack_start(GBLfilenameIsoColumn, renderer, FALSE);
-    gtk_tree_view_column_add_attribute(GBLfilenameIsoColumn, renderer, "pixbuf", COLUMN_ICON);
+    gtk_tree_view_column_add_attribute(GBLfilenameIsoColumn, renderer, "gicon", COLUMN_ICON);
     
     renderer = gtk_cell_renderer_text_new();
     /* this would fuck up usability beyond what my patience can handle */
