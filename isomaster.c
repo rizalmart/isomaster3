@@ -20,6 +20,8 @@
 #include <time.h>
 #include <signal.h>
 #include <locale.h>
+#include <unistd.h>
+#include <limits.h>
 
 #include "isomaster.h"
 
@@ -30,6 +32,38 @@ GtkWidget* GBLmainWindow;
 GtkWidget* GBLbrowserPaned;
 
 extern AppSettings GBLappSettings;
+
+#ifdef ENABLE_NLS
+/* Let the program find its translations when run straight from the build tree
+ * (without 'make install'). If <exedir>/locale exists, bind there; otherwise
+ * fall back to the compiled-in LOCALEDIR. */
+static void initTranslations(void)
+{
+    char exePath[PATH_MAX];
+    char localeDir[PATH_MAX];
+    ssize_t len;
+    char* lastSlash;
+
+    len = readlink("/proc/self/exe", exePath, sizeof(exePath) - 1);
+    if(len > 0)
+    {
+        exePath[len] = '\0';
+        lastSlash = strrchr(exePath, '/');
+        if(lastSlash != NULL)
+        {
+            snprintf(localeDir, sizeof(localeDir), "%.*s/locale",
+                     (int)(lastSlash - exePath), exePath);
+            if(access(localeDir, X_OK) == 0)
+            {
+                bindtextdomain("isomaster", localeDir);
+                return;
+            }
+        }
+    }
+
+    bindtextdomain("isomaster", LOCALEDIR);
+}
+#endif
 
 int main(int argc, char** argv)
 {
@@ -56,7 +90,7 @@ int main(int argc, char** argv)
 
 #ifdef ENABLE_NLS
     /* initialize gettext */
-    bindtextdomain("isomaster", LOCALEDIR);
+    initTranslations();
     bind_textdomain_codeset("isomaster", "UTF-8"); /* so that gettext() returns UTF-8 strings */
     textdomain("isomaster");
 #endif

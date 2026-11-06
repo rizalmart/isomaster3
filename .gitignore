@@ -1,10 +1,24 @@
-# Build artifacts
+# Build products
 *.o
-/isomaster
-bk/bk.a
-iniparser-4.1/libiniparser.a
-iniparser-4.1/libiniparser.so*
+isomaster
+isomaster.desktop
 
-# Generated files
-/isomaster.desktop
+# Translation catalogs built by po/Makefile (incl. staged ./locale/)
 po/*.mo
+/locale/
+
+# Vendored iniparser build output
+/iniparser-4.1/*.o
+/iniparser-4.1/*.a
+/iniparser-4.1/*.so
+/iniparser-4.1/*.lo
+/iniparser-4.1/.libs/
+
+# bk library build output
+/bk/*.o
+/bk/*.a
+
+# Editor / OS cruft
+*~
+*.swp
+.DS_Store
