@@ -15,6 +15,8 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 #include <libintl.h>
+#include <unistd.h>
+#include <limits.h>
 
 #include "isomaster.h"
 
@@ -26,12 +28,18 @@ static GtkWidget* newMenuItem(const char* iconName, const char* label,
 {
     GtkWidget* item = gtk_menu_item_new();
     GtkWidget* box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
-    GtkWidget* img = gtk_image_new_from_icon_name(iconName, GTK_ICON_SIZE_MENU);
     GtkWidget* lbl = gtk_label_new_with_mnemonic(label);
 
     gtk_label_set_mnemonic_widget(GTK_LABEL(lbl), item);
-    gtk_box_pack_start(GTK_BOX(box), img, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(box), lbl, FALSE, FALSE, 0);
+    /* only add an icon if the theme actually provides it, otherwise GTK
+       would display the 'missing image' placeholder */
+    if(gtk_icon_theme_has_icon(gtk_icon_theme_get_default(), iconName))
+    {
+        GtkWidget* img = gtk_image_new_from_icon_name(iconName, GTK_ICON_SIZE_MENU);
+        gtk_box_pack_start(GTK_BOX(box), img, FALSE, FALSE, 0);
+        gtk_box_reorder_child(GTK_BOX(box), lbl, -1); /* keep label after icon */
+    }
     gtk_container_add(GTK_CONTAINER(item), box);
     gtk_widget_show_all(item);
 
@@ -333,7 +341,7 @@ void buildMenu(GtkWidget* boxToPackInto)
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(rootMenu), menu);
     gtk_menu_set_accel_group(GTK_MENU(menu), accelGroup);
     
-    menuItem = newMenuItem("help-content", _("_Overview"),
+    menuItem = newMenuItem("help-contents", _("_Overview"),
                            G_CALLBACK(showHelpOverviewCbk), "<ISOMaster>/Help/Overview", NULL);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuItem);
     
@@ -461,11 +469,43 @@ gboolean closeMainWindowCbk(GtkWidget *widget, GdkEvent *event)
     return TRUE;
 }
 
+/* Icons are installed into ICONPATH by 'make install'. When running from the
+ * build tree that path doesn't exist, so also look in the icons/ directory
+ * next to the executable. The returned string is only valid until the next
+ * call. */
+static const char* findIconFile(const char* fileName)
+{
+    static char path[PATH_MAX];
+    char exePath[PATH_MAX];
+    ssize_t len;
+    char* lastSlash;
+
+    snprintf(path, sizeof(path), ICONPATH"/%s", fileName);
+    if(access(path, R_OK) == 0)
+        return path;
+
+    len = readlink("/proc/self/exe", exePath, sizeof(exePath) - 1);
+    if(len > 0)
+    {
+        exePath[len] = '\0';
+        lastSlash = strrchr(exePath, '/');
+        if(lastSlash != NULL)
+        {
+            snprintf(path, sizeof(path), "%.*s/icons/%s",
+                     (int)(lastSlash - exePath), exePath, fileName);
+            if(access(path, R_OK) == 0)
+                return path;
+        }
+    }
+
+    return path;
+}
+
 void loadAppIcon(GdkPixbuf** appIcon)
 {
     /* the path ICONPATH is defined in the makefile
     * if this fails i get NULL which is ok */
-    *appIcon = gdk_pixbuf_new_from_file(ICONPATH"/isomaster.png", NULL);
+    *appIcon = gdk_pixbuf_new_from_file(findIconFile("isomaster.png"), NULL);
 }
 
 void loadIcon(GtkWidget** destIcon, const char* srcFile, int size)
@@ -492,13 +532,13 @@ void loadIcons(void)
     
     gtk_icon_size_lookup(GTK_ICON_SIZE_LARGE_TOOLBAR, &size, &size);
     
-    loadIcon(&GBLgoBackIcon, ICONPATH"/go-back-kearone.png", size);
-    loadIcon(&GBLgoBackIcon2, ICONPATH"/go-back-kearone.png", size);
-    loadIcon(&GBLnewDirIcon, ICONPATH"/folder-new-kearone.png", size);
-    loadIcon(&GBLnewDirIcon2, ICONPATH"/folder-new-kearone.png", size);
-    loadIcon(&GBLaddIcon, ICONPATH"/add2-kearone.png", size);
-    loadIcon(&GBLextractIcon, ICONPATH"/extract2-kearone.png", size);
-    loadIcon(&GBLdeleteIcon2, ICONPATH"/delete-kearone.png", size);
+    loadIcon(&GBLgoBackIcon, findIconFile("go-back-kearone.png"), size);
+    loadIcon(&GBLgoBackIcon2, findIconFile("go-back-kearone.png"), size);
+    loadIcon(&GBLnewDirIcon, findIconFile("folder-new-kearone.png"), size);
+    loadIcon(&GBLnewDirIcon2, findIconFile("folder-new-kearone.png"), size);
+    loadIcon(&GBLaddIcon, findIconFile("add2-kearone.png"), size);
+    loadIcon(&GBLextractIcon, findIconFile("extract2-kearone.png"), size);
+    loadIcon(&GBLdeleteIcon2, findIconFile("delete-kearone.png"), size);
 }
 
 void rejectDialogCbk(GtkWidget *widget, GdkEvent *event)
