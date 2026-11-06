@@ -10,9 +10,12 @@ po/*.mo
 # Vendored iniparser build output
 /iniparser-4.1/*.o
 /iniparser-4.1/*.a
-/iniparser-4.1/*.so
+/iniparser-4.1/libiniparser.so*
 /iniparser-4.1/*.lo
 /iniparser-4.1/.libs/
+
+# Stray top-level build artifacts
+/messages.mo
 
 # bk library build output
 /bk/*.o
